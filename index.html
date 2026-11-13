@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover：讓畫面延伸到 iPhone 瀏海與底部橫條，再用 safe-area 留邊 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#14202c">
+  <title>一水千田｜卡牌 AR 輔助提示</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- iOS Safari 16.4 以前不支援 importmap；這支 polyfill 只在瀏覽器不支援時才會作用 -->
+  <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+
+  <!--
+    CDN 版本（彼此相容，請勿單獨升級其中一個）：
+    - MindAR 1.2.5（mindar-image-three 會 import "three"，由下面的 importmap 指到同一份 Three.js）
+    - Three.js 0.160.0（MindAR 1.2.5 官方範例使用的版本）
+  -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+    }
+  }
+  </script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <!-- MindAR 會在這裡放入相機畫面（video）與 3D 畫布（canvas） -->
+  <div id="ar-container"></div>
+
+  <!-- 掃描引導框：相機開啟但還沒掃到卡牌時顯示 -->
+  <div id="scan-guide" hidden>
+    <div class="scan-frame"><i></i><i></i><i></i><i></i></div>
+    <p>請將鏡頭對準要查詢的卡牌</p>
+  </div>
+
+  <!-- 右上角：重新掃描 -->
+  <button id="btn-reset" class="chip chip-top" type="button" hidden>重新掃描</button>
+
+  <!-- 下方：重播按鈕＋對話框（疊在一起，對話框收起時重播按鈕會自動往下靠） -->
+  <div id="bottom-stack">
+    <button id="btn-replay" class="chip" type="button" hidden>重播示範</button>
+
+    <section id="dialogue" hidden aria-live="polite">
+      <div class="dlg-head">
+        <img id="dlg-portrait" alt="" hidden>
+        <span id="dlg-name" class="name-tag"></span>
+      </div>
+      <p id="dlg-line"></p>
+      <div class="dlg-actions">
+        <button id="dlg-close" class="ghost" type="button">收起提示</button>
+        <button id="dlg-next" class="primary small" type="button">下一句</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 初始啟動畫面：行動瀏覽器必須由使用者點擊後，才能啟動相機與音效 -->
+  <div id="start-screen" class="overlay">
+    <div class="card-box">
+      <p class="eyebrow">一水千田・卡牌提示</p>
+      <h1>看不懂卡牌時，掃一下</h1>
+      <p>歷史人物會站到卡牌上，示範容易搞錯的規則。<br>不用這個網頁，桌遊也能完整遊玩。</p>
+      <button id="btn-start" class="primary" type="button">開啟 AR 輔助掃描</button>
+      <p class="note">需要使用相機。影像只在手機上辨識，不會上傳。</p>
+      <p id="inapp-hint" class="warn" hidden></p>
+    </div>
+  </div>
+
+  <div id="loading" class="overlay" hidden><p>相機啟動中…</p></div>
+
+  <div id="error-screen" class="overlay" hidden>
+    <div class="card-box">
+      <h1>無法開啟 AR</h1>
+      <p id="error-msg"></p>
+      <button id="btn-retry" class="primary" type="button">重新整理</button>
+    </div>
+  </div>
+
+  <!-- 橫式時提示轉直式 -->
+  <div id="rotate-hint" class="overlay"><p>請把手機轉成直式</p></div>
+</body>
+</html>
